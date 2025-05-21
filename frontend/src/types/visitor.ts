@@ -5,5 +5,6 @@ export interface Visitor {
 
 export interface VisitorStats {
   total_visitors: number;
-  recent_visitors: Visitor[];
+  disp_times: number[];
+  disp_intensity: number[];
 } 

@@ -28,7 +28,9 @@ const GROUP_THRESHOLD = 0.5;
 
 export default function Home() {
   const [totalVisitors, setTotalVisitors] = useState(0);
-  const [recentVisitors, setRecentVisitors] = useState<Visitor[]>([]);
+  // const [recentVisitors, setRecentVisitors] = useState<Visitor[]>([]);
+  const [disp_intensity, setDispIntensity] = useState<number[]>([]);
+  const [disp_time, setDispTime] = useState<number[]>([]);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const lastEventTimeRef = useRef<Date | null>(null);
   const currentGroupSizeRef = useRef<number>(0);
@@ -76,6 +78,7 @@ export default function Home() {
     if (lastEventTime === null) {
       // 初回クリック
       startNewGroup(currentTime);
+      console.log('初回クリック');
       return;
     }
 
@@ -85,6 +88,8 @@ export default function Home() {
       // 既存のグループに追加
       currentGroupSizeRef.current += 1;
       lastEventTimeRef.current = currentTime;
+      console.log('既存のグループに追加');
+      console.log('currentGroupSizeRef.current', currentGroupSizeRef.current);
       setGroupTimer();
     } else {
       // 前のグループを確定して送信
@@ -107,7 +112,9 @@ export default function Home() {
       try {
         const data: VisitorStats = JSON.parse(event.data);
         setTotalVisitors(data.total_visitors);
-        setRecentVisitors(data.recent_visitors);
+        setDispTime(data.disp_times);
+        setDispIntensity(data.disp_intensity);
+        console.log('データ取得成功');
       } catch {
       }
     };
@@ -122,7 +129,10 @@ export default function Home() {
       .then(res => res.json())
       .then((data: VisitorStats) => {
         setTotalVisitors(data.total_visitors);
-        setRecentVisitors(data.recent_visitors);
+        // setRecentVisitors(data.recent_visitors);
+        setDispTime(data.disp_times);
+        setDispIntensity(data.disp_intensity);
+        console.log('データ取得成功');
       })
       .catch(() => {
       });
@@ -151,11 +161,11 @@ export default function Home() {
   }, [handleClick]);
 
   const chartData = {
-    labels: recentVisitors.map(v => new Date(v.timestamp).toLocaleTimeString()),
+    labels: disp_time.map(t => new Date(t).toLocaleTimeString()),
     datasets: [
       {
         label: '来場者数',
-        data: recentVisitors.map(v => v.group_size),
+        data: disp_intensity,
         borderColor: 'rgb(75, 192, 192)',
         tension: 0.1
       }

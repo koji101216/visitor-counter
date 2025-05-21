@@ -1,6 +1,8 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
+from datetime import datetime, timedelta
+from scipy.stats import norm
+import numpy as np
 import json
 import csv
 import os
@@ -8,6 +10,14 @@ import logging
 
 # ログレベルの設定
 logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+
+# カーネル平滑化のバンド幅
+bandwidth = 50 # ときどきCVして更新するかも
+
+# 日時を数値で扱うとき用設定
+BASE_TIME = datetime(2025, 5, 24, 9, 0, 0)  # 例: 2025年5月24日9時0分0秒を基準
+DISP_TIME_ST = datetime(2025, 5, 24, 9, 0, 0)  # 表示する時間の基準
+DISP_TIME_ED = datetime(2025, 5, 24, 18, 0, 0)  # 表示する時間の基準
 
 app = FastAPI()
 
@@ -34,27 +44,76 @@ if not os.path.exists(CSV_FILE):
         writer = csv.writer(f)
         writer.writerow(["timestamp", "group_size"])
 
+
+def read_csv():
+    with open(CSV_FILE, 'r') as file:
+        reader = csv.DictReader(file)
+        rows = list(reader)
+        data_time = []
+        data_num = []
+        for row in rows:
+            dt = datetime.strptime(row['timestamp'], "%Y-%m-%d %H:%M:%S")
+            diff = dt - BASE_TIME
+            minutes = diff.total_seconds() / 60  # 分数に変換
+            if(minutes < 0): continue
+            data_time.append(minutes)
+            data_num.append(int(row['group_size']))
+        data_time = np.array(data_time)
+        data_num = np.array(data_num)
+    return data_time, data_num
+
+
+def estimate_intensity_function(times, curr_time):
+
+    def intensity_function(t):
+        weights = norm.pdf((t - times) / bandwidth)
+        correction = norm.cdf((curr_time - t) / bandwidth) - norm.cdf(- t / bandwidth)
+        return np.sum(weights) / (bandwidth * correction)
+    
+    return intensity_function 
+
+def calc_intensity(data_time):
+
+    estimated_intensity = estimate_intensity_function(data_time, data_time[-1])
+
+    dt_st = DISP_TIME_ST - BASE_TIME
+    dt_st = dt_st.total_seconds() / 60  # 分数に変換
+    dt_ed = DISP_TIME_ED - BASE_TIME
+    dt_ed = dt_ed.total_seconds() / 60  # 分数に変換
+    t_values = np.linspace(dt_st, dt_ed, 1000)
+    intensity_values = [estimated_intensity(t) for t in t_values]
+    
+    t_datetime = [BASE_TIME + timedelta(minutes=t) for t in t_values]
+    
+    return t_datetime, intensity_values
+
+
+def calc_total_num(data_num):
+    total_num = np.sum(data_num)
+    return total_num    
+
 def get_visitor_stats():
+    
     try:
-        with open(CSV_FILE, "r") as f:
-            reader = csv.DictReader(f)
-            rows = list(reader)
-            
-        total_visitors = sum(int(row["group_size"]) for row in rows)
-        recent_visitors = [
-            {"timestamp": row["timestamp"], "group_size": int(row["group_size"])}
-            for row in rows[-10:]  # 最新の10件
-        ]
+        data_time, data_num = read_csv()
+        t_values, intensity_values = calc_intensity(data_time)
+        total_num = calc_total_num(data_num)
         
+        print(f"人数: {total_num}")
+        print(f"強度の平均 {np.mean(intensity_values)}")
+
         return {
-            "total_visitors": total_visitors,
-            "recent_visitors": recent_visitors
+            "disp_times": t_values.tolist(),
+            "disp_intensity": intensity_values.tolist(),
+            "total_visitors": total_num
         }
     except Exception:
         return {
-            "total_visitors": 0,
-            "recent_visitors": []
+            "disp_times": [],
+            "disp_intensity": [],
+            "total_visitors": 0
         }
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -97,4 +156,5 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.get("/stats")
 async def get_stats():
     """統計情報の取得API"""
+    print("GETリクエストを受け付けました")
     return get_visitor_stats() 
