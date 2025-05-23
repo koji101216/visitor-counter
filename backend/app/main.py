@@ -41,7 +41,7 @@ active_connections: set[WebSocket] = set()
 
 # CSVファイルのパス
 DATA_DIR = "data"
-CSV_FILE = os.path.join(DATA_DIR, "visitors.csv")
+CSV_FILE = os.path.join(DATA_DIR, "visitor.csv")
 
 # データディレクトリとCSVファイルの作成
 os.makedirs(DATA_DIR, exist_ok=True)

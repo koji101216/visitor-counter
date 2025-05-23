@@ -30,11 +30,7 @@ export default function Home() {
   const [totalVisitors, setTotalVisitors] = useState(0);
   // const [recentVisitors, setRecentVisitors] = useState<Visitor[]>([]);
   const [disp_intensity, setDispIntensity] = useState<number[]>([]);
-<<<<<<< HEAD
-  const [disp_time, setDispTime] = useState<number[]>([]);
-=======
   const [disp_time, setDispTime] = useState<string[]>([]);
->>>>>>> tmp
   const [ws, setWs] = useState<WebSocket | null>(null);
   const lastEventTimeRef = useRef<Date | null>(null);
   const currentGroupSizeRef = useRef<number>(0);
@@ -125,10 +121,6 @@ export default function Home() {
         setDispTime(data.disp_times);
         setDispIntensity(data.disp_intensity);
         console.log('データ取得成功');
-<<<<<<< HEAD
-=======
-        console.log(new Date(data.disp_times[0]));
->>>>>>> tmp
       } catch {
       }
     };
@@ -147,10 +139,6 @@ export default function Home() {
         setDispTime(data.disp_times);
         setDispIntensity(data.disp_intensity);
         console.log('データ取得成功');
-<<<<<<< HEAD
-=======
-        console.log(data.disp_times[0]);
->>>>>>> tmp
       })
       .catch(() => {
       });
@@ -182,11 +170,7 @@ export default function Home() {
     labels: disp_time.map(t => new Date(t).toLocaleTimeString()),
     datasets: [
       {
-<<<<<<< HEAD
-        label: '来場者数',
-=======
         label: '来場グループ数/分',
->>>>>>> tmp
         data: disp_intensity,
         borderColor: 'rgb(75, 192, 192)',
         tension: 0.1
