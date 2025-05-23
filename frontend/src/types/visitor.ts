@@ -5,6 +5,10 @@ export interface Visitor {
 
 export interface VisitorStats {
   total_visitors: number;
+<<<<<<< HEAD
   disp_times: number[];
+=======
+  disp_times: string[];
+>>>>>>> tmp
   disp_intensity: number[];
 } 

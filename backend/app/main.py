@@ -3,13 +3,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
 from scipy.stats import norm
 import numpy as np
+from datetime import datetime, timedelta
+from scipy.stats import norm
+import numpy as np
 import json
 import csv
 import os
 import logging
+from zoneinfo import ZoneInfo
+
 
 # ログレベルの設定
 logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+
 
 # カーネル平滑化のバンド幅
 bandwidth = 50 # ときどきCVして更新するかも
@@ -60,6 +66,7 @@ def read_csv():
             data_num.append(int(row['group_size']))
         data_time = np.array(data_time)
         data_num = np.array(data_num)
+    print(f"CSVから読み込んだデータ数: {len(data_time)}")
     return data_time, data_num
 
 
@@ -76,38 +83,37 @@ def calc_intensity(data_time):
 
     estimated_intensity = estimate_intensity_function(data_time, data_time[-1])
 
-    dt_st = DISP_TIME_ST - BASE_TIME
-    dt_st = dt_st.total_seconds() / 60  # 分数に変換
-    dt_ed = DISP_TIME_ED - BASE_TIME
-    dt_ed = dt_ed.total_seconds() / 60  # 分数に変換
+    dt_st = 0
+    dt_ed = data_time[-1] 
     t_values = np.linspace(dt_st, dt_ed, 1000)
-    intensity_values = [estimated_intensity(t) for t in t_values]
-    
-    t_datetime = [BASE_TIME + timedelta(minutes=t) for t in t_values]
+    intensity_values = [float(estimated_intensity(t)) for t in t_values]
+
+    t_datetime = [(BASE_TIME + timedelta(minutes=t)).isoformat() for t in t_values]
     
     return t_datetime, intensity_values
 
 
 def calc_total_num(data_num):
     total_num = np.sum(data_num)
-    return total_num    
+    return int(total_num)    
 
 def get_visitor_stats():
     
     try:
         data_time, data_num = read_csv()
-        t_values, intensity_values = calc_intensity(data_time)
+        t_datetime, intensity_values = calc_intensity(data_time)
         total_num = calc_total_num(data_num)
         
         print(f"人数: {total_num}")
         print(f"強度の平均 {np.mean(intensity_values)}")
 
         return {
-            "disp_times": t_values.tolist(),
-            "disp_intensity": intensity_values.tolist(),
+            "disp_times": t_datetime,
+            "disp_intensity": intensity_values,
             "total_visitors": total_num
         }
-    except Exception:
+    except Exception as e:
+        print(f"エラーが発生しました: {str(e)}")
         return {
             "disp_times": [],
             "disp_intensity": [],
@@ -130,7 +136,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 group_size = event_data.get("group_size", 1)
                 
                 # 現在時刻を取得
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                timestamp = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d %H:%M:%S")
                 
                 # CSVにデータを追加
                 with open(CSV_FILE, "a", newline="") as f:

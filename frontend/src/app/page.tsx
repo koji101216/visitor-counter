@@ -30,11 +30,16 @@ export default function Home() {
   const [totalVisitors, setTotalVisitors] = useState(0);
   // const [recentVisitors, setRecentVisitors] = useState<Visitor[]>([]);
   const [disp_intensity, setDispIntensity] = useState<number[]>([]);
+<<<<<<< HEAD
   const [disp_time, setDispTime] = useState<number[]>([]);
+=======
+  const [disp_time, setDispTime] = useState<string[]>([]);
+>>>>>>> tmp
   const [ws, setWs] = useState<WebSocket | null>(null);
   const lastEventTimeRef = useRef<Date | null>(null);
   const currentGroupSizeRef = useRef<number>(0);
   const groupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [groupSize, setGroupSize] = useState(0); // 追加
 
   // グループデータを送信する関数
   const sendGroupData = useCallback((groupSize: number) => {
@@ -58,6 +63,7 @@ export default function Home() {
         sendGroupData(currentGroupSizeRef.current);
         lastEventTimeRef.current = null;
         currentGroupSizeRef.current = 0;
+        setGroupSize(0); // 送信後に表示もリセット
       }
     }, GROUP_THRESHOLD * 1000);
   }, [sendGroupData]);
@@ -66,6 +72,7 @@ export default function Home() {
   const startNewGroup = useCallback((currentTime: Date) => {
     lastEventTimeRef.current = currentTime;
     currentGroupSizeRef.current = 1;
+    setGroupSize(1); // 表示も更新
     setGroupTimer();
   }, [setGroupTimer]);
 
@@ -87,6 +94,7 @@ export default function Home() {
     if (timeDiff <= GROUP_THRESHOLD) {
       // 既存のグループに追加
       currentGroupSizeRef.current += 1;
+      setGroupSize(currentGroupSizeRef.current); // 表示も更新
       lastEventTimeRef.current = currentTime;
       console.log('既存のグループに追加');
       console.log('currentGroupSizeRef.current', currentGroupSizeRef.current);
@@ -104,9 +112,11 @@ export default function Home() {
   useEffect(() => {
     const websocket = new WebSocket('ws://localhost:8000/ws');
     
+    console.log('WebSocket接続中...');
     websocket.onopen = () => {
       setWs(websocket);
     };
+    console.log('WebSocket接続成功');
 
     websocket.onmessage = (event) => {
       try {
@@ -115,6 +125,10 @@ export default function Home() {
         setDispTime(data.disp_times);
         setDispIntensity(data.disp_intensity);
         console.log('データ取得成功');
+<<<<<<< HEAD
+=======
+        console.log(new Date(data.disp_times[0]));
+>>>>>>> tmp
       } catch {
       }
     };
@@ -133,6 +147,10 @@ export default function Home() {
         setDispTime(data.disp_times);
         setDispIntensity(data.disp_intensity);
         console.log('データ取得成功');
+<<<<<<< HEAD
+=======
+        console.log(data.disp_times[0]);
+>>>>>>> tmp
       })
       .catch(() => {
       });
@@ -164,7 +182,11 @@ export default function Home() {
     labels: disp_time.map(t => new Date(t).toLocaleTimeString()),
     datasets: [
       {
+<<<<<<< HEAD
         label: '来場者数',
+=======
+        label: '来場グループ数/分',
+>>>>>>> tmp
         data: disp_intensity,
         borderColor: 'rgb(75, 192, 192)',
         tension: 0.1
@@ -173,13 +195,20 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-blue-50 to-white px-2">
+    <div className="h-screen overflow-hidden flex flex-col justify-center items-center bg-gradient-to-b from-blue-50 to-white px-2">
       <div className="flex flex-col items-center w-full max-w-3xl mx-auto">
         <h1 className="text-4xl font-bold text-blue-800 mt-8 mb-2 text-center">来場者カウンター</h1>
         <p className="text-2xl text-blue-600 mb-4 text-center">総来場者数: {totalVisitors}人</p>
-        <p className="text-lg text-gray-600 mb-8 text-center">スペースキーを押すか、下のキーをクリックしてください</p>
+        <p className="text-lg text-gray-600 mb-8 text-center">
+          ようこそ！工学博覧会へ<br />
+          下の入場ボタン
+          <img src="/enter_key.png" alt="Enterキー" style={{ display: 'inline', width: '2em', verticalAlign: 'middle' }} />
+          を工学博覧会に来た<span className="text-blue-700 font-bold">グループの人数分(やさしく)連打</span>してください！<br />
+          (※先頭の人が押してください)
+        </p>
+        <p className="text-lg text-blue-700 mb-4 text-center">グループ人数: {groupSize}人</p>
 
-        <div
+        {/* <div
           tabIndex={0}
           onClick={handleClick}
           className="select-none w-[420px] h-16 flex items-center justify-center bg-gradient-to-b from-gray-100 to-gray-300 rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.15)] border border-gray-300 text-2xl font-bold text-gray-700 transition-all duration-150 hover:shadow-[0_8px_24px_rgba(0,0,0,0.18)] hover:-translate-y-1 active:shadow-[inset_0_2px_8px_rgba(0,0,0,0.18),0_2px_8px_rgba(0,0,0,0.10)] active:translate-y-1 cursor-pointer mb-10 outline-none focus:ring-4 focus:ring-blue-300"
@@ -187,10 +216,19 @@ export default function Home() {
           style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.10), inset 0 2px 8px rgba(0,0,0,0.10)' }}
         >
           <span className="tracking-widest drop-shadow-sm">Space</span>
-        </div>
+        </div> */}
 
         <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-4 flex-1 min-h-0 mb-8">
-          <Line data={chartData} />
+          <Line 
+            data={chartData} 
+            options={{
+              scales: {
+                y: {
+                  beginAtZero: true
+                }
+              }
+            }}
+          />
         </div>
       </div>
     </div>
