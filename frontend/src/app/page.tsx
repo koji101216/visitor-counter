@@ -121,6 +121,7 @@ export default function Home() {
         setDispTime(data.disp_times);
         setDispIntensity(data.disp_intensity);
         console.log('データ取得成功');
+        console.log('event.data', data.total_visitors);
       } catch {
       }
     };
@@ -170,7 +171,7 @@ export default function Home() {
     labels: disp_time.map(t => new Date(t).toLocaleTimeString()),
     datasets: [
       {
-        label: '来場グループ数/分',
+        label: '来場者/分',
         data: disp_intensity,
         borderColor: 'rgb(75, 192, 192)',
         tension: 0.1
@@ -180,17 +181,15 @@ export default function Home() {
 
   return (
     <div className="h-screen overflow-hidden flex flex-col justify-center items-center bg-gradient-to-b from-blue-50 to-white px-2">
-      <div className="flex flex-col items-center w-full max-w-3xl mx-auto">
-        <h1 className="text-4xl font-bold text-blue-800 mt-8 mb-2 text-center">来場者カウンター</h1>
-        <p className="text-2xl text-blue-600 mb-4 text-center">総来場者数: {totalVisitors}人</p>
-        <p className="text-lg text-gray-600 mb-8 text-center">
+      <div className="flex flex-col items-center w-full max-w-full mx-auto">
+        <h1 className="text-7xl font-bold text-blue-800 mt-8 mb-8 text-center">来場者カウンター</h1>
+        <p className="text-5xl text-blue-600 mb-8 text-center">総来場者数: {totalVisitors}人</p>
+        <p className="text-5xl text-gray-600 mb-6 text-center">
           ようこそ！工学博覧会へ<br />
           下の入場ボタン
           <img src="/enter_key.png" alt="Enterキー" style={{ display: 'inline', width: '2em', verticalAlign: 'middle' }} />
-          を工学博覧会に来た<span className="text-blue-700 font-bold">グループの人数分(やさしく)連打</span>してください！<br />
-          (※先頭の人が押してください)
+          を<span className="text-blue-700 font-bold">一人一回</span>押してください！<br />
         </p>
-        <p className="text-lg text-blue-700 mb-4 text-center">グループ人数: {groupSize}人</p>
 
         {/* <div
           tabIndex={0}

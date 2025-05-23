@@ -22,8 +22,6 @@ bandwidth = 50 # ときどきCVして更新するかも
 
 # 日時を数値で扱うとき用設定
 BASE_TIME = datetime(2025, 5, 24, 9, 0, 0)  # 例: 2025年5月24日9時0分0秒を基準
-DISP_TIME_ST = datetime(2025, 5, 24, 9, 0, 0)  # 表示する時間の基準
-DISP_TIME_ED = datetime(2025, 5, 24, 18, 0, 0)  # 表示する時間の基準
 
 app = FastAPI()
 
@@ -133,6 +131,7 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_text()
             try:
                 event_data = json.loads(data)
+                print(f"受信データ: {event_data}")
                 group_size = event_data.get("group_size", 1)
                 
                 # 現在時刻を取得
