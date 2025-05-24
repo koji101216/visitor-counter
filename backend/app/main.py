@@ -21,7 +21,7 @@ logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 bandwidth = 50 # ときどきCVして更新するかも
 
 # 日時を数値で扱うとき用設定
-BASE_TIME = datetime(2025, 5, 24, 9, 0, 0)  # 例: 2025年5月24日9時0分0秒を基準
+BASE_TIME = datetime(2025, 5, 24, 8, 0, 0)  # 例: 2025年5月24日9時0分0秒を基準
 
 app = FastAPI()
 

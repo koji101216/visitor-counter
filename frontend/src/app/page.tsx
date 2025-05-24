@@ -98,7 +98,8 @@ export default function Home() {
     } else {
       // 前のグループを確定して送信
       if (currentGroupSizeRef.current > 0) {
-        sendGroupData(currentGroupSizeRef.current);
+        // sendGroupData(currentGroupSizeRef.current);
+        sendGroupData(1);
       }
       // 新しいグループを開始
       startNewGroup(currentTime);
